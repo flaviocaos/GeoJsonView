@@ -1,57 +1,98 @@
-# GeoJSON View README
+# GeoJSON View v2.0
+
+Aplicação web interativa para visualização, edição e análise de dados geoespaciais em formato GeoJSON, com integração de camadas temáticas WMS do IBGE.
+
+![GeoJSON View](https://img.shields.io/badge/versão-2.0-blue) ![Licença](https://img.shields.io/badge/licença-MIT-green) ![HTML](https://img.shields.io/badge/linguagem-HTML%2FCSS%2FJS-orange)
+
+---
+
 ## Descrição
-O GeoJSON View é uma aplicação web interativa que utiliza a biblioteca Leaflet para visualizar, editar e explorar dados geoespaciais em formato GeoJSON. 
-Esta aplicação também integra diversas camadas temáticas através de serviços WMS fornecidos pelo IBGE, permitindo análises geográficas ricas e dinâmicas. 
-O projeto foi projetado para profissionais e entusiastas de geotecnologias que buscam uma ferramenta prática e funcional para manipulação de dados espaciais.
 
-## Funcionalidades Principais
-1. Visualização de GeoJSON: Carregue arquivos GeoJSON e visualize os dados no mapa.
-3. Edição Interativa: Use ferramentas de desenho para criar e editar polígonos, linhas, retângulos e marcadores diretamente no mapa.
-3. Camadas Temáticas: Adicione camadas WMS do IBGE, como Meio Ambiente, Agricultura, Recursos Hídricos, Florestas e Índices Econômicos.
-4. Estilo Dinâmico: Destaque feições selecionadas no mapa com estilos personalizados
-5. Exibição de Atributos: Veja os atributos das feições GeoJSON em uma tabela lateral detalhada.
-6. Controle de Camadas: Alterne entre camadas de mapa base (ruas e satélite) e ative/desative camadas temáticas.
+O GeoJSON View é uma ferramenta leve e de arquivo único (`index.html`) voltada para profissionais e entusiastas de geotecnologias. Permite carregar, visualizar, editar e exportar dados espaciais diretamente no navegador, sem necessidade de instalação ou servidor.
 
-## Tecnologias Utilizadas
+---
 
-1. HTML/CSS: Estrutura e design responsivo para uma interface simples e funcional.
-2. JavaScript: Manipulação dinâmica do mapa e eventos interativos.
-3. Leaflet: Biblioteca principal para renderização e manipulação de mapas.
-4. Leaflet-Draw: Ferramentas de edição e desenho de feições geográficas.
-5. Turf.js: Análise geoespacial avançada (pronto para futuras extensões).
-6. Serviços WMS do IBGE: Integração de camadas temáticas externas.
+## Funcionalidades
+
+### Visualização
+- Carregamento de arquivos GeoJSON por clique ou **arrastar e soltar (drag & drop)**
+- Suporte a geometrias do tipo Ponto, Linha e Polígono
+- Ajuste automático do mapa ao extent da camada carregada
+- Exibição de coordenadas em tempo real ao mover o cursor
+
+### Edição
+- Ferramentas de desenho: polígono, linha, retângulo e marcador (via Leaflet-Draw)
+- Seleção de cor do traço com paleta de 5 cores
+- Controle de opacidade de preenchimento via slider
+- Destaque visual da feição selecionada
+
+### Camadas
+- **4 camadas base:** OpenStreetMap, Satélite ESRI, Topográfico e CartoDB Dark
+- **5 camadas temáticas WMS do IBGE:** Meio Ambiente, Agricultura, Recursos Hídricos, Florestas e Índices Econômicos
+- Painel de camadas integrado na interface
+
+### Painel Lateral (4 abas)
+| Aba | Conteúdo |
+|-----|----------|
+| **Atributos** | Tabela com propriedades da feição selecionada |
+| **Feições** | Lista navegável com busca/filtro e contadores por tipo |
+| **Análise** | Área total, comprimento total, bounding box e centróide via Turf.js |
+| **Camadas** | Controle de camadas base e WMS |
+
+### Outras Funcionalidades
+- **Busca de endereço** via geocodificação (Nominatim/OpenStreetMap)
+- **Exportação** do GeoJSON (incluindo feições desenhadas) para arquivo `.geojson`
+- **Rótulos** ativáveis/desativáveis nas feições
+- Painel lateral recolhível
+- Notificações visuais (toast) para todas as ações
+- Tema escuro moderno
+
+---
+
+## Tecnologias
+
+| Biblioteca | Versão | Uso |
+|------------|--------|-----|
+| [Leaflet](https://leafletjs.com/) | 1.9.4 | Renderização e manipulação do mapa |
+| [Leaflet-Draw](https://github.com/Leaflet/Leaflet.draw) | 1.0.4 | Ferramentas de desenho e edição |
+| [Turf.js](https://turfjs.org/) | 6.5.0 | Análises geoespaciais (área, comprimento, centróide) |
+| WMS IBGE | — | Camadas temáticas externas |
+| Nominatim | — | Geocodificação de endereços |
+
+> Todas as bibliotecas são carregadas via **cdnjs.cloudflare.com**, sem necessidade de instalação.
+
+---
 
 ## Como Usar
-1. Abrir o projeto: Salve o código em um arquivo index.html e abra-o em um navegador moderno
-2. Visualizar dados GeoJSON: Clique no botão "Carregar GeoJSON" no canto superior direito e selecione o arquivo GeoJSON que deseja visualizar.
-3. Explorar o mapa: Navegue pelo mapa, interaja com as camadas temáticas e veja as informações das feições clicando sobre elas.
-4. Editar elementos: Utilize a barra de ferramentas de desenho para criar novas feições no mapa ou editar as existentes.
-5. Alternar camadas: Use o controle de camadas para alternar entre mapas base (Ruas ou Satélite) e ativar/desativar camadas temáticas
 
-## Estrutura do Código
-1. Cabeçalho HTML: Configurações iniciais, como links para bibliotecas externas (Leaflet, Leaflet-Draw e Turf.js).
-2. Estilo CSS: Layout responsivo para o mapa e a tabela de informações.
-3. Scripts JavaScript:
-     Configuração inicial do mapa.
-     Controle de camadas base e temáticas.
-     Ferramentas de desenho e eventos interativos.
-     Lógica para carregar, exibir e editar arquivos GeoJSON.
-   
+1. **Abrir:** Faça o download do `index.html` e abra em qualquer navegador moderno
+2. **Carregar dados:** Clique em "Carregar GeoJSON" ou arraste um arquivo `.geojson` para a tela
+3. **Explorar:** Clique em uma feição para ver seus atributos no painel lateral
+4. **Analisar:** Vá até a aba "Analise" e clique em "Calcular Analises"
+5. **Desenhar:** Use a barra de ferramentas do mapa para criar novas feições
+6. **Exportar:** Clique em "Exportar" para salvar o GeoJSON atualizado
+7. **Buscar:** Digite um endereço na barra superior e pressione Enter
+
+---
+
+## Estrutura do Projeto
+
+```
+GeoJsonView/
+├── index.html   # Aplicação completa (HTML + CSS + JavaScript)
+├── README.md
+└── LICENSE
+```
+
+---
+
 ## Requisitos
-1. Navegador moderno com suporte a ES6+.
-2. Conexão com a internet para carregar bibliotecas externas e camadas WMS.
 
-## Futuras Extensões
-1. Suporte a análises geoespaciais avançadas com Turf.js.
-2. Exportação de feições editadas para arquivos GeoJSON.
-3. Integração com outras fontes de dados WMS/WMTS.
-4. Personalização de estilos e ícones das feições.
+- Navegador moderno com suporte a ES5+
+- Conexão com a internet (para carregar bibliotecas e camadas WMS)
 
-![Image](https://github.com/user-attachments/assets/ee9ee8ab-c841-4129-b8c7-90553fd2937f)
-![Image](https://github.com/user-attachments/assets/9ddb8efe-cf00-4d8a-9ff9-809efc81a965)
-![Image](https://github.com/user-attachments/assets/fa7b16cd-a5b9-4fc6-baa6-c8406b5640ca)
+---
 
+## Licença
 
-
-
-
+Distribuído sob a licença MIT. Veja o arquivo `LICENSE` para mais detalhes.

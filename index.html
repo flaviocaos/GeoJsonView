@@ -1,261 +1,514 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>GeoJSON View</title>
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  <script src="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@turf/turf@6.5.0/turf.min.js"></script>
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-  <link rel="stylesheet" href="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.css">
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 0;
-      padding: 0;
-      display: flex;
-      flex-direction: column;
-      height: 100vh;
-    }
-
-    header {
-      background-color: #2c3e50;
-      color: #ecf0f1;
-      padding: 10px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-
-    header h1 {
-      font-size: 24px;
-      font-family: 'Georgia', serif;
-      margin: 0;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-
-    header img {
-      height: 50px;
-    }
-
-    #container {
-      display: flex;
-      flex: 1;
-    }
-
-    #map {
-      flex: 2;
-      height: 100%;
-    }
-
-    #info {
-      flex: 1;
-      padding: 10px;
-      border-left: 1px solid #ccc;
-      overflow-y: auto;
-      background-color: #f9f9f9;
-    }
-
-    #info table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 10px;
-    }
-
-    #info table th, #info table td {
-      border: 1px solid #ddd;
-      padding: 8px;
-      text-align: left;
-    }
-
-    #info table th {
-      background-color: #f2f2f2;
-    }
-
-    .leaflet-draw-toolbar {
-      margin-bottom: 10px;
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GeoJSON View v2.0</title>
+<style>
+:root{--bg:#1a2634;--panel:#1e2d3d;--accent:#3d9be9;--accent2:#27ae60;--danger:#e74c3c;--text:#ecf0f1;--muted:#7f8c8d;--border:#2c3e50;--row:#243447;--rowhov:#2d4060}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',Arial,sans-serif;display:flex;flex-direction:column;height:100vh;background:var(--bg);color:var(--text);overflow:hidden}
+header{background:var(--panel);padding:8px 14px;display:flex;align-items:center;justify-content:space-between;border-bottom:2px solid var(--accent);z-index:1000;flex-shrink:0}
+.header-left{display:flex;align-items:center;gap:10px}
+.logo{width:36px;height:36px;background:var(--accent);border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:bold;font-size:14px;color:#fff}
+header h1{font-size:18px;font-weight:700;color:var(--text)}
+header h1 span{color:var(--accent);font-size:12px;font-weight:400;margin-left:6px;background:rgba(61,155,233,.15);padding:2px 6px;border-radius:10px}
+.header-right{display:flex;gap:8px;align-items:center}
+.btn{padding:6px 12px;border:none;border-radius:6px;cursor:pointer;font-size:12px;font-weight:600;display:inline-flex;align-items:center;gap:5px;transition:.2s}
+.btn-primary{background:var(--accent);color:#fff}.btn-primary:hover{background:#2980b9}
+.btn-success{background:var(--accent2);color:#fff}.btn-success:hover{background:#219a52}
+.btn-danger{background:var(--danger);color:#fff}.btn-danger:hover{background:#c0392b}
+.btn-ghost{background:rgba(255,255,255,.08);color:var(--text)}.btn-ghost:hover{background:rgba(255,255,255,.15)}
+#toolbar{background:var(--panel);padding:6px 14px;display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--border);flex-wrap:wrap;flex-shrink:0}
+.tool-sep{width:1px;height:24px;background:var(--border);margin:0 4px}
+.tool-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+#coordDisplay{font-size:11px;color:var(--muted);margin-left:auto;font-family:monospace}
+#main{display:flex;flex:1;overflow:hidden}
+#map{flex:1;height:100%}
+#sidebarWrapper{position:relative;display:flex;height:100%}
+#sidebar{width:320px;background:var(--panel);display:flex;flex-direction:column;border-left:1px solid var(--border);overflow:hidden;transition:width .3s}
+#sidebar.collapsed{width:0}
+#toggleSidebar{position:absolute;right:0;top:50%;transform:translateY(-50%);z-index:1001;background:var(--panel);border:1px solid var(--border);color:var(--text);border-right:none;padding:8px 4px;cursor:pointer;border-radius:4px 0 0 4px;font-size:14px;line-height:1}
+.tab-bar{display:flex;border-bottom:1px solid var(--border);flex-shrink:0}
+.tab{flex:1;padding:8px 4px;text-align:center;font-size:10px;font-weight:600;cursor:pointer;color:var(--muted);transition:.2s;border-bottom:2px solid transparent}
+.tab.active{color:var(--accent);border-bottom-color:var(--accent);background:rgba(61,155,233,.07)}
+.tab:hover:not(.active){color:var(--text)}
+.tab-content{display:none;flex:1;overflow-y:auto;padding:10px;flex-direction:column}
+.tab-content.active{display:flex}
+.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}
+.stat-card{background:var(--row);border-radius:8px;padding:10px;text-align:center}
+.stat-card .val{font-size:20px;font-weight:700;color:var(--accent)}
+.stat-card .lbl{font-size:10px;color:var(--muted);text-transform:uppercase;margin-top:2px}
+#attrTable{width:100%;border-collapse:collapse;font-size:12px}
+#attrTable th,#attrTable td{padding:7px 8px;border-bottom:1px solid var(--border);text-align:left;word-break:break-all}
+#attrTable th{background:var(--bg);color:var(--muted);font-size:10px;text-transform:uppercase;font-weight:600}
+#attrTable tr:hover td{background:var(--rowhov)}
+.no-data{text-align:center;color:var(--muted);padding:20px 10px;font-size:13px}
+.feat-item{padding:8px 10px;border-radius:6px;margin-bottom:4px;background:var(--row);cursor:pointer;font-size:12px;border:1px solid transparent;transition:.15s}
+.feat-item:hover{border-color:var(--accent);background:var(--rowhov)}
+.feat-item.selected{border-color:var(--accent);background:var(--rowhov)}
+.feat-item .feat-type{font-size:10px;color:var(--muted);text-transform:uppercase}
+.analysis-card{background:var(--row);border-radius:8px;padding:12px;margin-bottom:8px}
+.analysis-card h4{font-size:12px;color:var(--accent);margin-bottom:6px}
+.analysis-val{font-size:14px;font-weight:600}
+.analysis-unit{font-size:10px;color:var(--muted);margin-left:4px}
+.layer-item{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:6px;margin-bottom:4px;background:var(--row);font-size:12px}
+.layer-item input{accent-color:var(--accent)}
+#dropZone{border:2px dashed var(--border);border-radius:10px;padding:24px;text-align:center;color:var(--muted);font-size:13px;cursor:pointer;transition:.2s;margin-bottom:10px}
+#dropZone:hover,.drag{border-color:var(--accent)!important;color:var(--accent)!important}
+.color-opt{width:20px;height:20px;border-radius:50%;cursor:pointer;border:2px solid transparent;transition:.2s;display:inline-block;vertical-align:middle}
+.color-opt.active,.color-opt:hover{border-color:#fff;transform:scale(1.2)}
+.badge{background:var(--accent);color:#fff;font-size:10px;padding:1px 5px;border-radius:10px;margin-left:3px}
+.search-wrap{display:flex;gap:6px;margin-bottom:10px}
+.search-wrap input,.search-input{background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:6px 10px;font-size:12px;outline:none}
+.search-wrap input:focus,.search-input:focus{border-color:var(--accent)}
+.search-wrap input{flex:1}
+#searchBox{width:180px}
+#toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#2c3e50;color:#fff;padding:8px 18px;border-radius:20px;font-size:13px;z-index:9999;opacity:0;transition:opacity .3s;pointer-events:none;border:1px solid var(--accent)}
+#toast.show{opacity:1}
+#loading{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:99999;flex-direction:column;gap:12px}
+#loading p{color:var(--muted);font-size:14px}
+.spinner{width:40px;height:40px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>
 </head>
 <body>
-  <header>
-    <h1>
-      <img src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='48' stroke='%232c3e50' stroke-width='4' fill='%23ecf0f1'/><text x='50%' y='55%' text-anchor='middle' fill='%232c3e50' font-size='16' font-family='Arial' dy='.3em'>GJ View</text></svg>" alt="GeoJSON View Logo">
-      GeoJSON View
-    </h1>
-  </header>
 
-  <div id="container">
-    <div id="map"></div>
-    <div id="info">
-      <h2>Informações Selecionadas</h2>
-      <table id="attributesTable">
-        <thead>
-          <tr>
-            <th>Atributo</th>
-            <th>Valor</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td colspan="2">Nenhuma feição selecionada</td>
-          </tr>
-        </tbody>
-      </table>
+<div id="loading"><div class="spinner"></div><p>Carregando bibliotecas...</p></div>
+
+<header>
+  <div class="header-left">
+    <div class="logo">GJ</div>
+    <h1>GeoJSON View <span>v2.0</span></h1>
+  </div>
+  <div class="header-right">
+    <input id="searchBox" class="search-input" type="text" placeholder="Buscar endereco (Enter)...">
+    <button class="btn btn-primary" id="btnLoad">Carregar GeoJSON</button>
+    <button class="btn btn-success" id="btnExport">Exportar</button>
+    <button class="btn btn-danger" id="btnClear">Limpar</button>
+  </div>
+</header>
+
+<div id="toolbar">
+  <span class="tool-label">Cor:</span>
+  <div class="color-opt active" style="background:#e74c3c" data-color="#e74c3c"></div>
+  <div class="color-opt" style="background:#3498db" data-color="#3498db"></div>
+  <div class="color-opt" style="background:#27ae60" data-color="#27ae60"></div>
+  <div class="color-opt" style="background:#f39c12" data-color="#f39c12"></div>
+  <div class="color-opt" style="background:#9b59b6" data-color="#9b59b6"></div>
+  <div class="tool-sep"></div>
+  <span class="tool-label">Opacidade:</span>
+  <input type="range" id="opacitySlider" min="10" max="100" value="70" style="width:80px;accent-color:var(--accent)">
+  <span id="opacityVal" style="font-size:11px;color:var(--muted)">70%</span>
+  <div class="tool-sep"></div>
+  <button class="btn btn-ghost" id="btnFit">Ajustar Mapa</button>
+  <button class="btn btn-ghost" id="btnToggleLabels">Rotulos</button>
+  <div id="coordDisplay">Lat: -- &nbsp; Lng: --</div>
+</div>
+
+<div id="main">
+  <div id="map"></div>
+  <div id="sidebarWrapper">
+    <button id="toggleSidebar">&lsaquo;</button>
+    <div id="sidebar">
+      <div class="tab-bar">
+        <div class="tab active" data-tab="attrs">Atributos</div>
+        <div class="tab" data-tab="features">Feicoes<span class="badge" id="featCount">0</span></div>
+        <div class="tab" data-tab="analysis">Analise</div>
+        <div class="tab" data-tab="layers">Camadas</div>
+      </div>
+      <div class="tab-content active" id="tab-attrs">
+        <div id="dropZone">Arraste um GeoJSON aqui<br>ou clique em "Carregar GeoJSON"</div>
+        <table id="attrTable">
+          <thead><tr><th>Atributo</th><th>Valor</th></tr></thead>
+          <tbody><tr><td colspan="2" class="no-data">Nenhuma feicao selecionada</td></tr></tbody>
+        </table>
+      </div>
+      <div class="tab-content" id="tab-features">
+        <div class="search-wrap"><input type="text" id="featSearch" placeholder="Filtrar feicoes..."></div>
+        <div class="stat-grid">
+          <div class="stat-card"><div class="val" id="sTot">0</div><div class="lbl">Total</div></div>
+          <div class="stat-card"><div class="val" id="sPoly">0</div><div class="lbl">Poligonos</div></div>
+          <div class="stat-card"><div class="val" id="sLine">0</div><div class="lbl">Linhas</div></div>
+          <div class="stat-card"><div class="val" id="sPt">0</div><div class="lbl">Pontos</div></div>
+        </div>
+        <div id="featList"></div>
+      </div>
+      <div class="tab-content" id="tab-analysis">
+        <div class="analysis-card"><h4>Area Total (Poligonos)</h4><div class="analysis-val" id="aArea">--<span class="analysis-unit">km2</span></div></div>
+        <div class="analysis-card"><h4>Comprimento Total (Linhas)</h4><div class="analysis-val" id="aLen">--<span class="analysis-unit">km</span></div></div>
+        <div class="analysis-card"><h4>Bounding Box</h4><div class="analysis-val" style="font-size:11px;line-height:1.8" id="aBbox">--</div></div>
+        <div class="analysis-card"><h4>Centroide</h4><div class="analysis-val" style="font-size:11px" id="aCentroid">--</div></div>
+        <button class="btn btn-primary" style="width:100%;margin-top:8px;justify-content:center" id="btnRunAnalysis">Calcular Analises</button>
+      </div>
+      <div class="tab-content" id="tab-layers">
+        <p style="font-size:11px;color:var(--muted);margin-bottom:10px">Camadas base e tematicas WMS (IBGE)</p>
+        <div id="layersList"></div>
+      </div>
     </div>
   </div>
+</div>
 
-  <script>
-    // Configuração inicial do Leaflet
-    const map = L.map('map').setView([0, 0], 2);
+<div id="toast"></div>
+<input type="file" id="fileInput" accept=".geojson,.json" style="display:none">
 
-    // Camadas base
-    const streetsLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
-    const satelliteLayer = L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', { maxZoom: 17 });
+<script>
+function loadScript(src, cb) {
+  var s = document.createElement('script');
+  s.src = src;
+  s.onload = cb;
+  s.onerror = function() { console.error('Falha ao carregar: ' + src); cb(); };
+  document.head.appendChild(s);
+}
+function loadCSS(href) {
+  var l = document.createElement('link');
+  l.rel = 'stylesheet'; l.href = href;
+  document.head.appendChild(l);
+}
 
-    // Camadas temáticas externas
-    const environmentLayer = L.tileLayer.wms('https://geoservicos.ibge.gov.br/geoserver/ows?', {
-      layers: 'ibge:Meio_Ambiente',
-      format: 'image/png',
-      transparent: true
+loadCSS('https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css');
+loadCSS('https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.css');
+
+loadScript('https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js', function() {
+  loadScript('https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.js', function() {
+    loadScript('https://cdnjs.cloudflare.com/ajax/libs/Turf.js/6.5.0/turf.min.js', function() {
+      document.getElementById('loading').style.display = 'none';
+      initApp();
     });
+  });
+});
 
-    const agricultureLayer = L.tileLayer.wms('https://geoservicos.ibge.gov.br/geoserver/ows?', {
-      layers: 'ibge:Agricultura',
-      format: 'image/png',
-      transparent: true
-    });
+function initApp() {
+  var strokeColor = '#e74c3c';
+  var fillOpacity = 0.7;
+  var geojsonLayer = null;
+  var geojsonData = null;
+  var showLabels = false;
+  var geocodeMarker = null;
 
-    const waterLayer = L.tileLayer.wms('https://geoservicos.ibge.gov.br/geoserver/ows?', {
-      layers: 'ibge:Recursos_Hidricos',
-      format: 'image/png',
-      transparent: true
-    });
+  var map = L.map('map', {zoomControl: true}).setView([-15, -52], 4);
 
-    const forestLayer = L.tileLayer.wms('https://geoservicos.ibge.gov.br/geoserver/ows?', {
-      layers: 'ibge:Florestas',
-      format: 'image/png',
-      transparent: true
-    });
+  var baseLayers = {
+    'OpenStreetMap': L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {maxZoom: 19, attribution: '(c) OSM'}),
+    'Satelite ESRI': L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {maxZoom: 19, attribution: '(c) Esri'}),
+    'Topografico': L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {maxZoom: 17, attribution: '(c) OpenTopoMap'}),
+    'CartoDB Dark': L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {maxZoom: 19, attribution: '(c) CartoDB'})
+  };
+  baseLayers['OpenStreetMap'].addTo(map);
 
-    const economicIndexLayer = L.tileLayer.wms('https://geoservicos.ibge.gov.br/geoserver/ows?', {
-      layers: 'ibge:Indices_Economicos',
-      format: 'image/png',
-      transparent: true
-    });
+  var wmsLayers = {
+    'IBGE - Meio Ambiente': L.tileLayer.wms('https://geoservicos.ibge.gov.br/geoserver/ows?', {layers: 'ibge:Meio_Ambiente', format: 'image/png', transparent: true}),
+    'IBGE - Agricultura': L.tileLayer.wms('https://geoservicos.ibge.gov.br/geoserver/ows?', {layers: 'ibge:Agricultura', format: 'image/png', transparent: true}),
+    'IBGE - Recursos Hidricos': L.tileLayer.wms('https://geoservicos.ibge.gov.br/geoserver/ows?', {layers: 'ibge:Recursos_Hidricos', format: 'image/png', transparent: true}),
+    'IBGE - Florestas': L.tileLayer.wms('https://geoservicos.ibge.gov.br/geoserver/ows?', {layers: 'ibge:Florestas', format: 'image/png', transparent: true}),
+    'IBGE - Indices Economicos': L.tileLayer.wms('https://geoservicos.ibge.gov.br/geoserver/ows?', {layers: 'ibge:Indices_Economicos', format: 'image/png', transparent: true})
+  };
 
-    // Controle de camadas
-    L.control.layers({
-      "Ruas": streetsLayer,
-      "Satélite": satelliteLayer
-    }, {
-      "Meio Ambiente": environmentLayer,
-      "Agricultura": agricultureLayer,
-      "Águas": waterLayer,
-      "Florestas": forestLayer,
-      "Índices Econômicos": economicIndexLayer
+  L.control.layers(baseLayers, wmsLayers, {collapsed: true}).addTo(map);
+
+  var editableLayers = new L.FeatureGroup();
+  map.addLayer(editableLayers);
+  var drawCtrl = new L.Control.Draw({
+    edit: {featureGroup: editableLayers},
+    draw: {polygon: true, polyline: true, rectangle: true, marker: true, circle: false, circlemarker: false}
+  });
+  map.addControl(drawCtrl);
+  map.on(L.Draw.Event.CREATED, function(e) {
+    editableLayers.addLayer(e.layer);
+    toast('Feicao adicionada!');
+  });
+
+  map.on('mousemove', function(e) {
+    document.getElementById('coordDisplay').innerHTML = 'Lat: ' + e.latlng.lat.toFixed(5) + ' &nbsp; Lng: ' + e.latlng.lng.toFixed(5);
+  });
+
+  function getStyle(selected) {
+    if (selected) return {color: '#f1c40f', weight: 3, fillOpacity: fillOpacity, fillColor: '#f1c40f'};
+    return {color: strokeColor, weight: 2, fillOpacity: fillOpacity};
+  }
+
+  function loadGeoJSON(data) {
+    if (geojsonLayer) map.removeLayer(geojsonLayer);
+    geojsonData = data;
+    var feats = data.features || [];
+    feats.forEach(function(f, i) { f._idx = i; });
+
+    geojsonLayer = L.geoJSON(data, {
+      style: function() { return getStyle(false); },
+      pointToLayer: function(f, ll) {
+        return L.circleMarker(ll, {radius: 7, color: strokeColor, fillColor: strokeColor, fillOpacity: fillOpacity, weight: 2});
+      },
+      onEachFeature: function(feature, layer) {
+        layer.on('click', function() { selectFeature(feature, layer); });
+        var p = feature.properties || {};
+        var name = p.name || p.nome || p.Name || p.NM_MUN || p.NM_ESTADO || null;
+        if (name) layer.bindTooltip(String(name), {permanent: false});
+      }
     }).addTo(map);
 
-    // Variáveis globais
-    let geojsonLayer;
-    let geojsonData;
+    try { map.fitBounds(geojsonLayer.getBounds(), {padding: [20, 20]}); } catch(e) {}
+    updateStats(data);
+    buildFeatureList(data, '');
+    document.getElementById('dropZone').style.display = 'none';
+    toast('Carregadas ' + feats.length + ' feicoes!');
+  }
 
-    // Barra de edição
-    const editableLayers = new L.FeatureGroup();
-    map.addLayer(editableLayers);
+  function selectFeature(feature, layer) {
+    if (geojsonLayer) geojsonLayer.setStyle(getStyle(false));
+    layer.setStyle(getStyle(true));
+    try { if (layer.bringToFront) layer.bringToFront(); } catch(e) {}
+    showAttrs(feature);
+    document.querySelectorAll('.tab').forEach(function(x) { x.classList.remove('active'); });
+    document.querySelectorAll('.tab-content').forEach(function(x) { x.classList.remove('active'); });
+    document.querySelector('[data-tab="attrs"]').classList.add('active');
+    document.getElementById('tab-attrs').classList.add('active');
+    document.querySelectorAll('.feat-item').forEach(function(x) { x.classList.remove('selected'); });
+    var el = document.querySelector('.feat-item[data-idx="' + feature._idx + '"]');
+    if (el) { el.classList.add('selected'); el.scrollIntoView({block: 'nearest'}); }
+  }
 
-    const drawControl = new L.Control.Draw({
-      edit: {
-        featureGroup: editableLayers
-      },
-      draw: {
-        polygon: true,
-        polyline: true,
-        rectangle: true,
-        marker: true
-      }
-    });
-    map.addControl(drawControl);
-
-    // Eventos de desenho
-    map.on(L.Draw.Event.CREATED, (event) => {
-      const layer = event.layer;
-      editableLayers.addLayer(layer);
-    });
-
-    // Adicionar GeoJSON
-    function carregarGeoJSON(data) {
-      if (geojsonLayer) map.removeLayer(geojsonLayer);
-
-      geojsonLayer = L.geoJSON(data, {
-        style: { color: '#ff0000', weight: 2 },
-        onEachFeature: (feature, layer) => {
-          layer.on('click', () => selecionarFeature(feature, layer));
-        },
-      }).addTo(map);
-
-      map.fitBounds(geojsonLayer.getBounds());
+  function showAttrs(feature) {
+    var tbody = document.querySelector('#attrTable tbody');
+    var props = feature.properties;
+    if (!props || !Object.keys(props).length) {
+      tbody.innerHTML = '<tr><td colspan="2" class="no-data">Sem atributos</td></tr>';
+      return;
     }
-
-    // Selecionar feição
-    function selecionarFeature(feature, layer) {
-      geojsonLayer.setStyle({ color: '#ff0000', weight: 2 }); // Resetar estilo
-      layer.setStyle({ color: '#3498db', weight: 3 }); // Destaque
-
-      exibirAtributos(feature);
-    }
-
-    // Exibir atributos
-    function exibirAtributos(feature) {
-      const tableBody = document.querySelector('#attributesTable tbody');
-      tableBody.innerHTML = '';
-
-      if (!feature.properties) {
-        tableBody.innerHTML = `<tr><td colspan="2">Nenhuma informação disponível</td></tr>`;
-        return;
-      }
-
-      for (const [key, value] of Object.entries(feature.properties)) {
-        tableBody.innerHTML += `<tr><td>${key}</td><td>${value}</td></tr>`;
-      }
-    }
-
-    // Upload de GeoJSON
-    const fileInput = document.createElement('input');
-    fileInput.type = 'file';
-    fileInput.accept = '.geojson';
-    fileInput.style.display = 'none';
-
-    fileInput.addEventListener('change', (event) => {
-      const file = event.target.files[0];
-      if (!file) return;
-
-      const reader = new FileReader();
-      reader.onload = function (e) {
-        geojsonData = JSON.parse(e.target.result);
-        carregarGeoJSON(geojsonData);
-      };
-      reader.readAsText(file);
+    var html = '';
+    Object.keys(props).forEach(function(k) {
+      html += '<tr><td style="color:var(--muted)">' + k + '</td><td>' + (props[k] != null ? props[k] : '--') + '</td></tr>';
     });
+    tbody.innerHTML = html;
+  }
 
-    // Botão de upload
-    const button = L.control({ position: 'topright' });
-    button.onAdd = function () {
-      const div = L.DomUtil.create('div', 'leaflet-bar leaflet-control leaflet-control-custom');
-      div.innerHTML = '<button style="padding: 5px;">Carregar GeoJSON</button>';
-      div.style.backgroundColor = '#fff';
-      div.style.cursor = 'pointer';
+  function updateStats(data) {
+    var feats = data.features || [];
+    var poly = 0, line = 0, pt = 0;
+    feats.forEach(function(f) {
+      var t = (f.geometry && f.geometry.type) || '';
+      if (t.indexOf('Polygon') >= 0) poly++;
+      else if (t.indexOf('Line') >= 0) line++;
+      else if (t.indexOf('Point') >= 0) pt++;
+    });
+    document.getElementById('sTot').textContent = feats.length;
+    document.getElementById('sPoly').textContent = poly;
+    document.getElementById('sLine').textContent = line;
+    document.getElementById('sPt').textContent = pt;
+    document.getElementById('featCount').textContent = feats.length;
+  }
 
-      div.onclick = function () {
-        fileInput.click();
-      };
+  function buildFeatureList(data, filter) {
+    var list = document.getElementById('featList');
+    list.innerHTML = '';
+    var feats = data.features || [];
+    feats.forEach(function(f, i) {
+      var p = f.properties || {};
+      var name = p.name || p.nome || p.Name || p.NM_MUN || p.NM_ESTADO || ('Feicao ' + (i + 1));
+      var type = (f.geometry && f.geometry.type) || 'Desconhecido';
+      if (filter && String(name).toLowerCase().indexOf(filter.toLowerCase()) < 0) return;
+      var div = document.createElement('div');
+      div.className = 'feat-item';
+      div.dataset.idx = i;
+      div.innerHTML = '<div class="feat-type">' + type + '</div><div>' + name + '</div>';
+      div.addEventListener('click', function() {
+        geojsonLayer.eachLayer(function(layer) {
+          if (layer.feature && layer.feature._idx === i) selectFeature(layer.feature, layer);
+        });
+      });
+      list.appendChild(div);
+    });
+  }
 
-      return div;
+  document.getElementById('featSearch').addEventListener('input', function(e) {
+    if (geojsonData) buildFeatureList(geojsonData, e.target.value);
+  });
+
+  document.getElementById('btnRunAnalysis').addEventListener('click', function() {
+    if (!geojsonData) { toast('Nenhum GeoJSON carregado'); return; }
+    var feats = geojsonData.features || [];
+    var area = 0, len = 0;
+    feats.forEach(function(f) {
+      try {
+        var t = (f.geometry && f.geometry.type) || '';
+        if (t.indexOf('Polygon') >= 0) area += turf.area(f);
+        if (t.indexOf('Line') >= 0) len += turf.length(f, {units: 'kilometers'});
+      } catch(e) {}
+    });
+    document.getElementById('aArea').innerHTML = (area / 1e6).toFixed(4) + '<span class="analysis-unit">km2</span>';
+    document.getElementById('aLen').innerHTML = len.toFixed(3) + '<span class="analysis-unit">km</span>';
+    try {
+      var bbox = turf.bbox(geojsonData);
+      document.getElementById('aBbox').innerHTML = 'W: ' + bbox[0].toFixed(4) + '<br>S: ' + bbox[1].toFixed(4) + '<br>E: ' + bbox[2].toFixed(4) + '<br>N: ' + bbox[3].toFixed(4);
+      var c = turf.centroid(geojsonData);
+      document.getElementById('aCentroid').textContent = c.geometry.coordinates[1].toFixed(5) + ', ' + c.geometry.coordinates[0].toFixed(5);
+    } catch(e) {}
+    toast('Analises calculadas!');
+  });
+
+  document.getElementById('btnExport').addEventListener('click', function() {
+    if (!geojsonData && editableLayers.getLayers().length === 0) { toast('Nada para exportar'); return; }
+    var exportData = geojsonData ? JSON.parse(JSON.stringify(geojsonData)) : {type: 'FeatureCollection', features: []};
+    editableLayers.eachLayer(function(l) { if (l.toGeoJSON) exportData.features.push(l.toGeoJSON()); });
+    var blob = new Blob([JSON.stringify(exportData, null, 2)], {type: 'application/geo+json'});
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'GeoJSONView_export_' + Date.now() + '.geojson';
+    a.click();
+    toast('Exportado com sucesso!');
+  });
+
+  document.getElementById('btnClear').addEventListener('click', function() {
+    if (geojsonLayer) { map.removeLayer(geojsonLayer); geojsonLayer = null; }
+    geojsonData = null;
+    editableLayers.clearLayers();
+    document.querySelector('#attrTable tbody').innerHTML = '<tr><td colspan="2" class="no-data">Nenhuma feicao selecionada</td></tr>';
+    document.getElementById('featList').innerHTML = '';
+    document.getElementById('dropZone').style.display = '';
+    ['sTot','sPoly','sLine','sPt'].forEach(function(id) { document.getElementById(id).textContent = '0'; });
+    document.getElementById('featCount').textContent = '0';
+    toast('Camada removida');
+  });
+
+  document.getElementById('btnFit').addEventListener('click', function() {
+    if (geojsonLayer) try { map.fitBounds(geojsonLayer.getBounds(), {padding: [20, 20]}); } catch(e) {}
+  });
+
+  document.getElementById('btnToggleLabels').addEventListener('click', function() {
+    showLabels = !showLabels;
+    if (!geojsonLayer) return;
+    geojsonLayer.eachLayer(function(layer) {
+      if (!layer.feature) return;
+      var p = layer.feature.properties || {};
+      var name = p.name || p.nome || p.Name || p.NM_MUN || p.NM_ESTADO || null;
+      if (!name) return;
+      if (showLabels) layer.bindTooltip(String(name), {permanent: true}).openTooltip();
+      else layer.bindTooltip(String(name), {permanent: false});
+    });
+    toast(showLabels ? 'Rotulos ativados' : 'Rotulos desativados');
+  });
+
+  document.querySelectorAll('.color-opt').forEach(function(el) {
+    el.addEventListener('click', function() {
+      document.querySelectorAll('.color-opt').forEach(function(x) { x.classList.remove('active'); });
+      el.classList.add('active');
+      strokeColor = el.dataset.color;
+      if (geojsonLayer) geojsonLayer.setStyle(getStyle(false));
+    });
+  });
+
+  document.getElementById('opacitySlider').addEventListener('input', function() {
+    fillOpacity = this.value / 100;
+    document.getElementById('opacityVal').textContent = this.value + '%';
+    if (geojsonLayer) geojsonLayer.setStyle(getStyle(false));
+  });
+
+  document.querySelectorAll('.tab').forEach(function(t) {
+    t.addEventListener('click', function() {
+      document.querySelectorAll('.tab').forEach(function(x) { x.classList.remove('active'); });
+      document.querySelectorAll('.tab-content').forEach(function(x) { x.classList.remove('active'); });
+      t.classList.add('active');
+      document.getElementById('tab-' + t.dataset.tab).classList.add('active');
+    });
+  });
+
+  var sidebar = document.getElementById('sidebar');
+  document.getElementById('toggleSidebar').addEventListener('click', function() {
+    sidebar.classList.toggle('collapsed');
+    this.innerHTML = sidebar.classList.contains('collapsed') ? '&rsaquo;' : '&lsaquo;';
+    setTimeout(function() { map.invalidateSize(); }, 350);
+  });
+
+  var fileInput = document.getElementById('fileInput');
+  document.getElementById('btnLoad').addEventListener('click', function() { fileInput.click(); });
+  document.getElementById('dropZone').addEventListener('click', function() { fileInput.click(); });
+  fileInput.addEventListener('change', function(e) {
+    var file = e.target.files[0];
+    if (!file) return;
+    var reader = new FileReader();
+    reader.onload = function(ev) {
+      try { loadGeoJSON(JSON.parse(ev.target.result)); }
+      catch(err) { toast('Arquivo GeoJSON invalido'); }
     };
-    button.addTo(map);
-  </script>
+    reader.readAsText(file);
+    fileInput.value = '';
+  });
+
+  document.body.addEventListener('dragover', function(e) {
+    e.preventDefault();
+    document.getElementById('dropZone').classList.add('drag');
+  });
+  document.body.addEventListener('dragleave', function() {
+    document.getElementById('dropZone').classList.remove('drag');
+  });
+  document.body.addEventListener('drop', function(e) {
+    e.preventDefault();
+    document.getElementById('dropZone').classList.remove('drag');
+    var file = e.dataTransfer.files[0];
+    if (!file) return;
+    var reader = new FileReader();
+    reader.onload = function(ev) {
+      try { loadGeoJSON(JSON.parse(ev.target.result)); }
+      catch(err) { toast('Arquivo invalido'); }
+    };
+    reader.readAsText(file);
+  });
+
+  document.getElementById('searchBox').addEventListener('keydown', function(e) {
+    if (e.key !== 'Enter') return;
+    var q = this.value.trim();
+    if (!q) return;
+    fetch('https://nominatim.openstreetmap.org/search?format=json&q=' + encodeURIComponent(q) + '&limit=1')
+      .then(function(res) { return res.json(); })
+      .then(function(data) {
+        if (!data.length) { toast('Endereco nao encontrado'); return; }
+        var lat = parseFloat(data[0].lat), lon = parseFloat(data[0].lon);
+        if (geocodeMarker) map.removeLayer(geocodeMarker);
+        geocodeMarker = L.marker([lat, lon]).addTo(map).bindPopup(data[0].display_name).openPopup();
+        map.setView([lat, lon], 13);
+        toast('Localizacao encontrada!');
+      })
+      .catch(function() { toast('Erro na busca'); });
+  });
+
+  function buildLayersPanel() {
+    var div = document.getElementById('layersList');
+    div.innerHTML = '<p style="font-size:11px;color:var(--muted);margin-bottom:6px;font-weight:600">BASE</p>';
+    Object.keys(baseLayers).forEach(function(name) {
+      var layer = baseLayers[name];
+      var id = 'bl_' + Math.random().toString(36).slice(2);
+      var row = document.createElement('div');
+      row.className = 'layer-item';
+      row.innerHTML = '<input type="radio" name="base" id="' + id + '" ' + (map.hasLayer(layer) ? 'checked' : '') + '><label for="' + id + '" style="cursor:pointer;flex:1">' + name + '</label>';
+      row.querySelector('input').addEventListener('change', function() {
+        Object.keys(baseLayers).forEach(function(n) { if (map.hasLayer(baseLayers[n])) map.removeLayer(baseLayers[n]); });
+        map.addLayer(layer);
+      });
+      div.appendChild(row);
+    });
+    div.innerHTML += '<p style="font-size:11px;color:var(--muted);margin:10px 0 6px;font-weight:600">TEMATICAS WMS</p>';
+    Object.keys(wmsLayers).forEach(function(name) {
+      var layer = wmsLayers[name];
+      var id = 'wl_' + Math.random().toString(36).slice(2);
+      var row = document.createElement('div');
+      row.className = 'layer-item';
+      row.innerHTML = '<input type="checkbox" id="' + id + '"><label for="' + id + '" style="cursor:pointer;flex:1">' + name + '</label>';
+      row.querySelector('input').addEventListener('change', function(ev) {
+        if (ev.target.checked) map.addLayer(layer); else map.removeLayer(layer);
+      });
+      div.appendChild(row);
+    });
+  }
+  buildLayersPanel();
+
+  toast('GeoJSON View v2.0 pronto!');
+}
+
+function toast(msg) {
+  var el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  setTimeout(function() { el.classList.remove('show'); }, 2800);
+}
+</script>
 </body>
 </html>

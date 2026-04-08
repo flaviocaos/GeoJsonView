@@ -196,14 +196,12 @@ function initApp() {
   };
   baseLayers['OpenStreetMap'].addTo(map);
 
-  var wmsUrl = 'https://geoservicos.ibge.gov.br/geoserver/ows?';
-  var wmsOpts = {format: 'image/png', transparent: true, version: '1.1.1', attribution: '(c) IBGE'};
   var wmsLayers = {
-    'IBGE - Malha Municipal': L.tileLayer.wms(wmsUrl, Object.assign({}, wmsOpts, {layers: 'CGEO:BCIMmun_Municipio_A'})),
-    'IBGE - Malha Estadual': L.tileLayer.wms(wmsUrl, Object.assign({}, wmsOpts, {layers: 'CGEO:BCIMest_UnidFed_A'})),
-    'IBGE - Hidrografia': L.tileLayer.wms(wmsUrl, Object.assign({}, wmsOpts, {layers: 'CGEO:BCIMhid_Trecho_Drenagem_L'})),
-    'IBGE - Rodovias': L.tileLayer.wms(wmsUrl, Object.assign({}, wmsOpts, {layers: 'CGEO:BCIMtra_Rodovia_L'})),
-    'IBGE - Sedes Municipais': L.tileLayer.wms(wmsUrl, Object.assign({}, wmsOpts, {layers: 'CGEO:BCIMlml_Sede_Municipal_P'}))
+    'Relevo (OpenTopoMap)': L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {maxZoom:17, attribution:'(c) OpenTopoMap', opacity:0.7}),
+    'Ferrovias (OpenRailway)': L.tileLayer('https://{s}.tiles.openrailwaymap.org/standard/{z}/{x}/{y}.png', {maxZoom:19, attribution:'(c) OpenRailwayMap', opacity:0.8}),
+    'Qualidade do Ar (WAQI)': L.tileLayer('https://tiles.waqi.info/tiles/usepa-aqi/{z}/{x}/{y}.png?token=_TOKEN_DEMO_', {maxZoom:12, attribution:'(c) WAQI', opacity:0.6}),
+    'Precipitacao (RainViewer)': L.tileLayer('https://tilecache.rainviewer.com/v2/radar/nowcast/256/{z}/{x}/{y}/2/1_1.png', {maxZoom:12, attribution:'(c) RainViewer', opacity:0.5}),
+    'Stamen Watercolor': L.tileLayer('https://tiles.stadiamaps.com/tiles/stamen_watercolor/{z}/{x}/{y}.jpg', {maxZoom:16, attribution:'(c) Stadia/Stamen', opacity:0.6})
   };
 
   L.control.layers(baseLayers, wmsLayers, {collapsed: true}).addTo(map);

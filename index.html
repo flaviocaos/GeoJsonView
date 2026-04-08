@@ -196,12 +196,14 @@ function initApp() {
   };
   baseLayers['OpenStreetMap'].addTo(map);
 
+  var wmsUrl = 'https://geoservicos.ibge.gov.br/geoserver/ows?';
+  var wmsOpts = {format: 'image/png', transparent: true, version: '1.1.1', attribution: '(c) IBGE'};
   var wmsLayers = {
-    'IBGE - Meio Ambiente': L.tileLayer.wms('https://geoservicos.ibge.gov.br/geoserver/ows?', {layers: 'ibge:Meio_Ambiente', format: 'image/png', transparent: true}),
-    'IBGE - Agricultura': L.tileLayer.wms('https://geoservicos.ibge.gov.br/geoserver/ows?', {layers: 'ibge:Agricultura', format: 'image/png', transparent: true}),
-    'IBGE - Recursos Hidricos': L.tileLayer.wms('https://geoservicos.ibge.gov.br/geoserver/ows?', {layers: 'ibge:Recursos_Hidricos', format: 'image/png', transparent: true}),
-    'IBGE - Florestas': L.tileLayer.wms('https://geoservicos.ibge.gov.br/geoserver/ows?', {layers: 'ibge:Florestas', format: 'image/png', transparent: true}),
-    'IBGE - Indices Economicos': L.tileLayer.wms('https://geoservicos.ibge.gov.br/geoserver/ows?', {layers: 'ibge:Indices_Economicos', format: 'image/png', transparent: true})
+    'IBGE - Malha Municipal': L.tileLayer.wms(wmsUrl, Object.assign({}, wmsOpts, {layers: 'CGEO:BCIMmun_Municipio_A'})),
+    'IBGE - Malha Estadual': L.tileLayer.wms(wmsUrl, Object.assign({}, wmsOpts, {layers: 'CGEO:BCIMest_UnidFed_A'})),
+    'IBGE - Hidrografia': L.tileLayer.wms(wmsUrl, Object.assign({}, wmsOpts, {layers: 'CGEO:BCIMhid_Trecho_Drenagem_L'})),
+    'IBGE - Rodovias': L.tileLayer.wms(wmsUrl, Object.assign({}, wmsOpts, {layers: 'CGEO:BCIMtra_Rodovia_L'})),
+    'IBGE - Sedes Municipais': L.tileLayer.wms(wmsUrl, Object.assign({}, wmsOpts, {layers: 'CGEO:BCIMlml_Sede_Municipal_P'}))
   };
 
   L.control.layers(baseLayers, wmsLayers, {collapsed: true}).addTo(map);
